@@ -221,7 +221,15 @@
         function calculateDeviation(percent) {
             // Get the measured pressure
             const measInput = document.getElementById(`meas${percent}`);
-            const measValue = parseFloat(measInput.value) || 0;
+            const measValue = measInput.value ? parseFloat(measInput.value) : null;
+            
+            // If no measured value, clear the deviation cell and return
+            if (measValue === null || isNaN(measValue)) {
+                const deviationCell = document.getElementById(`deviation${percent}`);
+                deviationCell.innerHTML = '';
+                deviationCell.className = '';
+                return;
+            }
             
             // Get the calibration applied pressure (use default if blank)
             const calInput = document.getElementById(`cal${percent}`);
@@ -240,13 +248,18 @@
             // Format the deviation
             const formattedDeviation = deviation.toFixed(3) + '%';
             
-            // Check if deviation exceeds spec
-            const specDelta = span * (specValue / 100);
-            const specLimit = (specDelta / span) * 100; // Convert to %F.S.
-            
-            if (Math.abs(deviation) > specLimit) {
-                deviationCell.innerHTML = formattedDeviation;
-                deviationCell.className = 'error-cell';
+            // Check if deviation exceeds spec (only if we have valid spec values)
+            if (specValue > 0 && span > 0) {
+                const specDelta = span * (specValue / 100);
+                const specLimit = (specDelta / span) * 100; // Convert to %F.S.
+                
+                if (Math.abs(deviation) > specLimit) {
+                    deviationCell.innerHTML = formattedDeviation;
+                    deviationCell.className = 'error-cell';
+                } else {
+                    deviationCell.innerHTML = formattedDeviation;
+                    deviationCell.className = '';
+                }
             } else {
                 deviationCell.innerHTML = formattedDeviation;
                 deviationCell.className = '';
