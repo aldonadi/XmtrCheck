@@ -101,6 +101,26 @@
             font-style: italic;
             color: #666;
         }
+        .charts-section {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .chart-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chart-container h3 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        canvas {
+            max-height: 300px;
+        }
     </style>
 </head>
 <body>
@@ -174,18 +194,41 @@
                 </tr>
             </tbody>
         </table>
+        
+        <!-- Charts section -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <h3>% Deviation vs Data Point</h3>
+                <canvas id="deviationChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Applied Pressure vs Measured Pressure</h3>
+                <canvas id="pressureChart"></canvas>
+            </div>
+        </div>
     </div>
+    
+    <!-- Add Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <script>
         // Global variables to store input values
         let zeroValue = 0;
         let fullScaleValue = 0;
         let specValue = 0;
+        let deviationChart = null;
+        let pressureChart = null;
         
         // Add event listeners to input fields
         document.getElementById('zero').addEventListener('input', updateCalculations);
         document.getElementById('fullScale').addEventListener('input', updateCalculations);
         document.getElementById('spec').addEventListener('input', updateCalculations);
+        
+        // Initialize charts when page loads
+        window.addEventListener('load', function() {
+            createDeviationChart();
+            createPressureChart();
+        });
         
         function updateCalculations() {
             // Get input values
@@ -303,7 +346,237 @@
                 zeroValue = 0;
                 fullScaleValue = 0;
                 specValue = 0;
+                
+                // Clear charts
+                updateDeviationChart();
+                updatePressureChart();
             }
+        }
+        
+        function createDeviationChart() {
+            const ctx = document.getElementById('deviationChart').getContext('2d');
+            deviationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['0%', '25%', '50%', '75%', '100%'],
+                    datasets: [{
+                        label: '% Deviation',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '% Deviation'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Data Point (%F.S.)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '% Deviation vs Data Point',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createPressureChart() {
+            const ctx = document.getElementById('pressureChart').getContext('2d');
+            pressureChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Applied vs Measured',
+                        data: [],
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Measured Pressure'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Applied Pressure'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Applied Pressure vs Measured Pressure',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateDeviationChart() {
+            if (!deviationChart) return;
+            
+            const percentages = [0, 25, 50, 75, 100];
+            const deviations = [];
+            
+            percentages.forEach(percent => {
+                const deviationCell = document.getElementById(`deviation${percent}`);
+                const deviationText = deviationCell.textContent;
+                
+                if (deviationText) {
+                    // Extract the numeric value from text like "0.123%"
+                    const match = deviationText.match(/([-+]?\d+\.?\d*)%/);
+                    deviations.push(match ? parseFloat(match[1]) : 0);
+                } else {
+                    deviations.push(null);
+                }
+            });
+            
+            deviationChart.data.datasets[0].data = deviations;
+            deviationChart.update();
+        }
+        
+        function updatePressureChart() {
+            if (!pressureChart) return;
+            
+            const percentages = [0, 25, 50, 75, 100];
+            const dataPoints = [];
+            
+            percentages.forEach(percent => {
+                const calInput = document.getElementById(`cal${percent}`);
+                const measInput = document.getElementById(`meas${percent}`);
+                
+                const calValue = calInput.value ? parseFloat(calInput.value) : (zeroValue + (fullScaleValue - zeroValue) * (percent / 100));
+                const measValue = measInput.value ? parseFloat(measInput.value) : null;
+                
+                if (measValue !== null && !isNaN(measValue)) {
+                    dataPoints.push({
+                        x: calValue,
+                        y: measValue
+                    });
+                }
+            });
+            
+            pressureChart.data.datasets[0].data = dataPoints;
+            pressureChart.update();
+        }
+        
+        function updateCalculations() {
+            // Get input values
+            zeroValue = parseFloat(document.getElementById('zero').value) || 0;
+            fullScaleValue = parseFloat(document.getElementById('fullScale').value) || 0;
+            specValue = parseFloat(document.getElementById('spec').value) || 0;
+            
+            // Calculate span
+            const span = fullScaleValue - zeroValue;
+            const specDelta = span * (specValue / 100);
+            
+            // Update target pressures for each percentage
+            const percentages = [0, 25, 50, 75, 100];
+            
+            percentages.forEach(percent => {
+                const targetPressure = zeroValue + (span * (percent / 100));
+                const lowSpec = targetPressure - specDelta;
+                const highSpec = targetPressure + specDelta;
+                
+                const targetCell = document.getElementById(`target${percent}`);
+                targetCell.innerHTML = `
+                    <div style="font-size: 18px; font-weight: bold;">${targetPressure.toFixed(2)}</div>
+                    <div class="spec-range">${lowSpec.toFixed(2)} to ${highSpec.toFixed(2)}</div>
+                `;
+            });
+            
+            // Recalculate all deviations
+            percentages.forEach(percent => {
+                calculateDeviation(percent);
+            });
+            
+            // Update charts
+            updateDeviationChart();
+            updatePressureChart();
+        }
+        
+        function calculateDeviation(percent) {
+            // Get the measured pressure
+            const measInput = document.getElementById(`meas${percent}`);
+            const measValue = measInput.value ? parseFloat(measInput.value) : null;
+            
+            // If no measured value, clear the deviation cell and return
+            if (measValue === null || isNaN(measValue)) {
+                const deviationCell = document.getElementById(`deviation${percent}`);
+                deviationCell.innerHTML = '';
+                deviationCell.className = '';
+                updateDeviationChart();
+                updatePressureChart();
+                return;
+            }
+            
+            // Get the calibration applied pressure (use default if blank)
+            const calInput = document.getElementById(`cal${percent}`);
+            const calValue = calInput.value ? parseFloat(calInput.value) : (zeroValue + (fullScaleValue - zeroValue) * (percent / 100));
+            
+            // Calculate the expected pressure for this percentage
+            const expectedPressure = zeroValue + (fullScaleValue - zeroValue) * (percent / 100);
+            
+            // Calculate deviation as percentage of full scale
+            const span = fullScaleValue - zeroValue;
+            const deviation = ((measValue - calValue) / span) * 100;
+            
+            // Get the deviation cell
+            const deviationCell = document.getElementById(`deviation${percent}`);
+            
+            // Format the deviation
+            const formattedDeviation = deviation.toFixed(3) + '%';
+            
+            // Check if deviation exceeds spec (only if we have valid spec values)
+            if (specValue > 0 && span > 0) {
+                const specDelta = span * (specValue / 100);
+                const specLimit = (specDelta / span) * 100; // Convert to %F.S.
+                
+                if (Math.abs(deviation) > specLimit) {
+                    deviationCell.innerHTML = formattedDeviation;
+                    deviationCell.className = 'error-cell';
+                } else {
+                    deviationCell.innerHTML = formattedDeviation;
+                    deviationCell.className = '';
+                }
+            } else {
+                deviationCell.innerHTML = formattedDeviation;
+                deviationCell.className = '';
+            }
+            
+            // Update charts
+            updateDeviationChart();
+            updatePressureChart();
         }
     </script>
 </body>
