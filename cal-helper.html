@@ -147,7 +147,7 @@ canvas {
   }
 
   .input-group {
-    flex-direction: column;
+    flex-direction: row;  /* Keep this for stacking on small screens */
     align-items: flex-start;
   }
 
@@ -161,9 +161,33 @@ canvas {
     width: 100%;
   }
 
+  /* Fix for Buttons */
+  button, .reset-btn {
+    display: block; /*Stack buttons on smaller screen*/
+    margin-bottom: 5px;
+    width: 100%;
+  }
+  
   table {
     font-size: 0.8em; /* Reduce font size for better fit */
   }
+}
+
+/*Original Layout Restored (For larger screens)*/
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+label {
+  width: 150px;
+  font-weight: bold;
+}
+
+button, .reset-btn {
+  display: inline-block; /*Make buttons side by side*/
+  margin-right: 10px;
 }
     </style>
 </head>
