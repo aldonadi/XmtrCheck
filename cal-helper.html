@@ -553,24 +553,24 @@ button, .reset-btn {
                         y: {
                             title: {
                                 display: true,
-                                text: 'Measured Pressure'
+                                text: 'Pressure'
                             }
                         },
                         x: {
                             title: {
                                 display: true,
-                                text: 'Perfect Cal Pressure'
+                                text: '% Full Scale'
                             },
                             type: 'linear',
                             position: 'bottom',
-                            min: zeroValue,
-                            max: fullScaleValue
+                            min: 0,
+                            max: 100
                         }
                     },
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Applied Pressure vs Measured Pressure',
+                            text: 'Perfect Cal Pressure vs Measured Pressure by %F.S.',
                             font: {
                                 size: 16
                             }
@@ -624,19 +624,19 @@ button, .reset-btn {
                 const calValue = calInput.value ? parseFloat(calInput.value) : (zeroValue + (fullScaleValue - zeroValue) * (percent / 100));
                 const measValue = measInput.value ? parseFloat(measInput.value) : null;
                 
-                // Calculate the perfect calibration pressure (X value) for this percentage
+                // Calculate the perfect calibration pressure (Y value) for this percentage
                 const perfectCalPressure = zeroValue + (fullScaleValue - zeroValue) * (percent / 100);
                 
-                // Add to perfect data (x = perfect cal pressure, y = perfect cal pressure)
+                // Add to perfect data (x = percentage, y = perfect cal pressure)
                 perfectData.push({
-                    x: perfectCalPressure,
+                    x: percent,
                     y: perfectCalPressure
                 });
                 
-                // Add to measured data if value exists (x = perfect cal pressure, y = measured value)
+                // Add to measured data if value exists (x = percentage, y = measured value)
                 if (measValue !== null && !isNaN(measValue)) {
                     measuredData.push({
-                        x: perfectCalPressure,
+                        x: percent,
                         y: measValue
                     });
                 }
@@ -645,11 +645,11 @@ button, .reset-btn {
                 if (specValue > 0 && span > 0) {
                     const specDelta = span * (specValue / 100);
                     upperData.push({
-                        x: perfectCalPressure,
+                        x: percent,
                         y: perfectCalPressure + specDelta
                     });
                     lowerData.push({
-                        x: perfectCalPressure,
+                        x: percent,
                         y: perfectCalPressure - specDelta
                     });
                 }
@@ -660,12 +660,6 @@ button, .reset-btn {
             pressureChart.data.datasets[1].data = lowerData;
             pressureChart.data.datasets[2].data = perfectData;
             pressureChart.data.datasets[3].data = measuredData;
-            
-            // Update X-axis scale to match the range
-            if (pressureChart.options.scales && pressureChart.options.scales.x) {
-                pressureChart.options.scales.x.min = zeroValue;
-                pressureChart.options.scales.x.max = fullScaleValue;
-            }
             
             // Update visibility
             const perfectLine = pressureChart.data.datasets[2];
