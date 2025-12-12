@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        canvas { max-width: 600px; max-height: 400px; }
+        .debug-info { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Debug Test</h1>
+    <p>This test shows the exact data being passed to the chart.</p>
+    
+    <div class="debug-info">
+        <h3>Test Configuration:</h3>
+        <p>Zero: 0, Full Scale: 100</p>
+        <p>Measured values: [0.5, 22, 54, 81, 99]</p>
+    </div>
+    
+    <div class="debug-info">
+        <h3>Expected Data Points:</h3>
+        <p><strong>Perfect Line:</strong> [{x:0,y:0}, {x:25,y:25}, {x:50,y:50}, {x:75,y:75}, {x:100,y:100}]</p>
+        <p><strong>Measured Line:</strong> [{x:0,y:0.5}, {x:25,y:22}, {x:50,y:54}, {x:75,y:81}, {x:100,y:99}]</p>
+    </div>
+    
+    <div class="debug-info">
+        <h3>Actual Data Being Used:</h3>
+        <div id="actualData"></div>
+    </div>
+    
+    <canvas id="debugChart"></canvas>
+
+    <script>
+        // Simulate the exact logic from cal-helper.html
+        const zeroValue = 0;
+        const fullScaleValue = 100;
+        const percentages = [0, 25, 50, 75, 100];
+        const measuredValues = [0.5, 22, 54, 81, 99];
+        
+        let perfectData = [];
+        let measuredData = [];
+        
+        percentages.forEach((percent, index) => {
+            // Calculate the perfect calibration pressure (X value) for this percentage
+            const perfectCalPressure = zeroValue + (fullScaleValue - zeroValue) * (percent / 100);
+            
+            // Add to perfect data (x = perfect cal pressure, y = perfect cal pressure)
+            perfectData.push({
+                x: perfectCalPressure,
+                y: perfectCalPressure
+            });
+            
+            // Add to measured data
+            const measValue = measuredValues[index];
+            if (measValue !== null && !isNaN(measValue)) {
+                measuredData.push({
+                    x: perfectCalPressure,
+                    y: measValue
+                });
+            }
+        });
+        
+        // Display the actual data
+        document.getElementById('actualData').innerHTML = 
+            '<p><strong>Perfect Line:</strong> ' + JSON.stringify(perfectData) + '</p>' +
+            '<p><strong>Measured Line:</strong> ' + JSON.stringify(measuredData) + '</p>';
+        
+        // Create the chart with the exact same configuration as cal-helper.html
+        const ctx = document.getElementById('debugChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Perfect Line',
+                        data: perfectData,
+                        borderColor: 'rgba(0, 128, 0, 1)',
+                        backgroundColor: 'rgba(0, 128, 0, 1)',
+                        borderWidth: 2,
+                        pointRadius: 15,
+                        pointBackgroundColor: 'rgba(0, 128, 0, 1)',
+                        pointBorderColor: 'rgba(0, 128, 0, 1)',
+                        pointBorderWidth: 3,
+                        fill: false,
+                        tension: 0
+                    },
+                    {
+                        label: 'Measured Line',
+                        data: measuredData,
+                        borderColor: 'rgba(30, 144, 255, 1)',
+                        backgroundColor: 'rgba(30, 144, 255, 1)',
+                        borderWidth: 2,
+                        pointRadius: 15,
+                        pointBackgroundColor: 'rgba(30, 144, 255, 1)',
+                        pointBorderColor: 'rgba(30, 144, 255, 1)',
+                        pointBorderWidth: 3,
+                        fill: false,
+                        tension: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Measured Pressure'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Perfect Cal Pressure'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

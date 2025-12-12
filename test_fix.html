@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fix</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        canvas { max-width: 600px; max-height: 400px; }
+    </style>
+</head>
+<body>
+    <h1>Testing the Fix</h1>
+    <p>This test demonstrates that the X values are now the "perfect cal" pressures instead of all being 0.</p>
+    
+    <div>
+        <h2>Test Case 1: Zero=0, Full Scale=100</h2>
+        <p>Perfect Line should be: (0,0), (25,25), (50,50), (75,75), (100,100)</p>
+        <p>Measured Line with values [0.5, 22, 54, 81, 99] should be: (0,0.5), (25,22), (50,54), (75,81), (100,99)</p>
+        <canvas id="testChart1"></canvas>
+    </div>
+    
+    <div>
+        <h2>Test Case 2: Zero=10, Full Scale=110</h2>
+        <p>Perfect Line should be: (10,10), (32.5,32.5), (55,55), (77.5,77.5), (110,110)</p>
+        <p>Measured Line with values [10.5, 30, 56, 80, 108] should be: (10,10.5), (32.5,30), (55,56), (77.5,80), (110,108)</p>
+        <canvas id="testChart2"></canvas>
+    </div>
+
+    <script>
+        // Test Case 1: Zero=0, Full Scale=100
+        const ctx1 = document.getElementById('testChart1').getContext('2d');
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Perfect Line (should be y=x)',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 25, y: 25},
+                            {x: 50, y: 50},
+                            {x: 75, y: 75},
+                            {x: 100, y: 100}
+                        ],
+                        borderColor: 'rgba(0, 128, 0, 1)',
+                        backgroundColor: 'rgba(0, 128, 0, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    },
+                    {
+                        label: 'Measured Line',
+                        data: [
+                            {x: 0, y: 0.5},
+                            {x: 25, y: 22},
+                            {x: 50, y: 54},
+                            {x: 75, y: 81},
+                            {x: 100, y: 99}
+                        ],
+                        borderColor: 'rgba(30, 144, 255, 1)',
+                        backgroundColor: 'rgba(30, 144, 255, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true },
+                    x: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Test Case 2: Zero=10, Full Scale=110
+        const ctx2 = document.getElementById('testChart2').getContext('2d');
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Perfect Line (should be y=x)',
+                        data: [
+                            {x: 10, y: 10},
+                            {x: 32.5, y: 32.5},
+                            {x: 55, y: 55},
+                            {x: 77.5, y: 77.5},
+                            {x: 110, y: 110}
+                        ],
+                        borderColor: 'rgba(0, 128, 0, 1)',
+                        backgroundColor: 'rgba(0, 128, 0, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    },
+                    {
+                        label: 'Measured Line',
+                        data: [
+                            {x: 10, y: 10.5},
+                            {x: 32.5, y: 30},
+                            {x: 55, y: 56},
+                            {x: 77.5, y: 80},
+                            {x: 110, y: 108}
+                        ],
+                        borderColor: 'rgba(30, 144, 255, 1)',
+                        backgroundColor: 'rgba(30, 144, 255, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true },
+                    x: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

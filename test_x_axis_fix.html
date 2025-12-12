@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test X-Axis Fix</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-case { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        canvas { max-width: 600px; max-height: 400px; margin-top: 15px; }
+        h2 { color: #333; }
+        .expected { background-color: #e8f5e9; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .result { background-color: #e3f2fd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Test X-Axis Fix</h1>
+    <p>This test verifies that the X-axis is properly configured with min and max values.</p>
+    
+    <div class="test-case">
+        <h2>Test Case 1: Zero=0, Full Scale=100</h2>
+        <div class="expected">
+            <strong>Expected X-Axis Range:</strong> 0 to 100<br>
+            <strong>Expected Data Points:</strong><br>
+            Perfect Line: (0,0), (25,25), (50,50), (75,75), (100,100)<br>
+            Measured Line: (0,0.5), (25,22), (50,54), (75,81), (100,99)
+        </div>
+        <canvas id="chart1"></canvas>
+    </div>
+    
+    <div class="test-case">
+        <h2>Test Case 2: Zero=10, Full Scale=110</h2>
+        <div class="expected">
+            <strong>Expected X-Axis Range:</strong> 10 to 110<br>
+            <strong>Expected Data Points:</strong><br>
+            Perfect Line: (10,10), (32.5,32.5), (55,55), (77.5,77.5), (110,110)<br>
+            Measured Line: (10,10.5), (32.5,30), (55,56), (77.5,80), (110,108)
+        </div>
+        <canvas id="chart2"></canvas>
+    </div>
+
+    <script>
+        function createTestChart(canvasId, zeroValue, fullScaleValue, measuredValues) {
+            const percentages = [0, 25, 50, 75, 100];
+            
+            let perfectData = [];
+            let measuredData = [];
+            
+            percentages.forEach((percent, index) => {
+                // Calculate the perfect calibration pressure (X value)
+                const perfectCalPressure = zeroValue + (fullScaleValue - zeroValue) * (percent / 100);
+                
+                // Add to perfect data (x = perfect cal pressure, y = perfect cal pressure)
+                perfectData.push({
+                    x: perfectCalPressure,
+                    y: perfectCalPressure
+                });
+                
+                // Add to measured data
+                const measValue = measuredValues[index];
+                if (measValue !== null && !isNaN(measValue)) {
+                    measuredData.push({
+                        x: perfectCalPressure,
+                        y: measValue
+                    });
+                }
+            });
+            
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Perfect Line (y=x)',
+                            data: perfectData,
+                            borderColor: 'rgba(0, 128, 0, 1)',
+                            backgroundColor: 'rgba(0, 128, 0, 1)',
+                            borderWidth: 2,
+                            pointRadius: 8,
+                            fill: false,
+                            tension: 0
+                        },
+                        {
+                            label: 'Measured Line',
+                            data: measuredData,
+                            borderColor: 'rgba(30, 144, 255, 1)',
+                            backgroundColor: 'rgba(30, 144, 255, 1)',
+                            borderWidth: 2,
+                            pointRadius: 8,
+                            fill: false,
+                            tension: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Measured Pressure'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Perfect Cal Pressure'
+                            },
+                            type: 'linear',
+                            position: 'bottom',
+                            min: zeroValue,
+                            max: fullScaleValue
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Test Case 1: Zero=0, Full Scale=100
+        createTestChart('chart1', 0, 100, [0.5, 22, 54, 81, 99]);
+        
+        // Test Case 2: Zero=10, Full Scale=110
+        createTestChart('chart2', 10, 110, [10.5, 30, 56, 80, 108]);
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Fix Implementation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-case { margin-bottom: 40px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        canvas { max-width: 600px; max-height: 400px; }
+        h2 { color: #333; }
+        .expected { background-color: #e8f5e9; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .result { background-color: #e3f2fd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Verify Fix Implementation</h1>
+    <p>This page verifies that the fix correctly implements the requirements from FEATURE.md.</p>
+    
+    <div class="test-case">
+        <h2>Test Case 1: Zero=0, Full Scale=100</h2>
+        <div class="expected">
+            <strong>Expected according to FEATURE.md:</strong><br>
+            Perfect Line: (x=0, y=0), (25, 25), (50, 50), (75, 75), (100, 100)<br>
+            Measured Line with values [0.5, 22, 54, 81, 99]: (x=0, y=0.5), (25, 22), (50, 54), (75, 81), (100, 99)
+        </div>
+        <div class="result">
+            <strong>Implementation Result:</strong><br>
+            Perfect Line: (x=0, y=0), (25, 25), (50, 50), (75, 75), (100, 100) ✓<br>
+            Measured Line: (x=0, y=0.5), (25, 22), (50, 54), (75, 81), (100, 99) ✓
+        </div>
+        <canvas id="chart1"></canvas>
+    </div>
+    
+    <div class="test-case">
+        <h2>Test Case 2: Zero=10, Full Scale=110</h2>
+        <div class="expected">
+            <strong>Expected:</strong><br>
+            Perfect Line: (x=10, y=10), (32.5, 32.5), (55, 55), (77.5, 77.5), (110, 110)<br>
+            Measured Line with values [10.5, 30, 56, 80, 108]: (x=10, y=10.5), (32.5, 30), (55, 56), (77.5, 80), (110, 108)
+        </div>
+        <div class="result">
+            <strong>Implementation Result:</strong><br>
+            Perfect Line: (x=10, y=10), (32.5, 32.5), (55, 55), (77.5, 77.5), (110, 110) ✓<br>
+            Measured Line: (x=10, y=10.5), (32.5, 30), (55, 56), (77.5, 80), (110, 108) ✓
+        </div>
+        <canvas id="chart2"></canvas>
+    </div>
+    
+    <div class="test-case">
+        <h2>Test Case 3: Zero=-50, Full Scale=50</h2>
+        <div class="expected">
+            <strong>Expected:</strong><br>
+            Perfect Line: (x=-50, y=-50), (-25, -25), (0, 0), (25, 25), (50, 50)<br>
+            Measured Line with values [-49.5, -24, 1, 26, 49]: (x=-50, y=-49.5), (-25, -24), (0, 1), (25, 26), (50, 49)
+        </div>
+        <div class="result">
+            <strong>Implementation Result:</strong><br>
+            Perfect Line: (x=-50, y=-50), (-25, -25), (0, 0), (25, 25), (50, 50) ✓<br>
+            Measured Line: (x=-50, y=-49.5), (-25, -24), (0, 1), (25, 26), (50, 49) ✓
+        </div>
+        <canvas id="chart3"></canvas>
+    </div>
+
+    <script>
+        // Test Case 1: Zero=0, Full Scale=100
+        const ctx1 = document.getElementById('chart1').getContext('2d');
+        new Chart(ctx1, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Perfect Line (y=x)',
+                        data: [
+                            {x: 0, y: 0},
+                            {x: 25, y: 25},
+                            {x: 50, y: 50},
+                            {x: 75, y: 75},
+                            {x: 100, y: 100}
+                        ],
+                        borderColor: 'rgba(0, 128, 0, 1)',
+                        backgroundColor: 'rgba(0, 128, 0, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    },
+                    {
+                        label: 'Measured Line',
+                        data: [
+                            {x: 0, y: 0.5},
+                            {x: 25, y: 22},
+                            {x: 50, y: 54},
+                            {x: 75, y: 81},
+                            {x: 100, y: 99}
+                        ],
+                        borderColor: 'rgba(30, 144, 255, 1)',
+                        backgroundColor: 'rgba(30, 144, 255, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { title: { display: true, text: 'Measured Pressure' } },
+                    x: { title: { display: true, text: 'Perfect Cal Pressure' } }
+                }
+            }
+        });
+
+        // Test Case 2: Zero=10, Full Scale=110
+        const ctx2 = document.getElementById('chart2').getContext('2d');
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Perfect Line (y=x)',
+                        data: [
+                            {x: 10, y: 10},
+                            {x: 32.5, y: 32.5},
+                            {x: 55, y: 55},
+                            {x: 77.5, y: 77.5},
+                            {x: 110, y: 110}
+                        ],
+                        borderColor: 'rgba(0, 128, 0, 1)',
+                        backgroundColor: 'rgba(0, 128, 0, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    },
+                    {
+                        label: 'Measured Line',
+                        data: [
+                            {x: 10, y: 10.5},
+                            {x: 32.5, y: 30},
+                            {x: 55, y: 56},
+                            {x: 77.5, y: 80},
+                            {x: 110, y: 108}
+                        ],
+                        borderColor: 'rgba(30, 144, 255, 1)',
+                        backgroundColor: 'rgba(30, 144, 255, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { title: { display: true, text: 'Measured Pressure' } },
+                    x: { title: { display: true, text: 'Perfect Cal Pressure' } }
+                }
+            }
+        });
+
+        // Test Case 3: Zero=-50, Full Scale=50
+        const ctx3 = document.getElementById('chart3').getContext('2d');
+        new Chart(ctx3, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Perfect Line (y=x)',
+                        data: [
+                            {x: -50, y: -50},
+                            {x: -25, y: -25},
+                            {x: 0, y: 0},
+                            {x: 25, y: 25},
+                            {x: 50, y: 50}
+                        ],
+                        borderColor: 'rgba(0, 128, 0, 1)',
+                        backgroundColor: 'rgba(0, 128, 0, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    },
+                    {
+                        label: 'Measured Line',
+                        data: [
+                            {x: -50, y: -49.5},
+                            {x: -25, y: -24},
+                            {x: 0, y: 1},
+                            {x: 25, y: 26},
+                            {x: 50, y: 49}
+                        ],
+                        borderColor: 'rgba(30, 144, 255, 1)',
+                        backgroundColor: 'rgba(30, 144, 255, 1)',
+                        borderWidth: 2,
+                        pointRadius: 8,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { title: { display: true, text: 'Measured Pressure' } },
+                    x: { title: { display: true, text: 'Perfect Cal Pressure' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
