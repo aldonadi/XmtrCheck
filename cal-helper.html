@@ -335,6 +335,10 @@ button, .reset-btn {
             percentages.forEach(percent => {
                 calculateDeviation(percent);
             });
+            
+            // Update charts
+            updateDeviationChart();
+            updatePressureChart();
         }
         
         function calculateDeviation(percent) {
@@ -347,6 +351,8 @@ button, .reset-btn {
                 const deviationCell = document.getElementById(`deviation${percent}`);
                 deviationCell.innerHTML = '';
                 deviationCell.className = '';
+                updateDeviationChart();
+                updatePressureChart();
                 return;
             }
             
@@ -383,6 +389,10 @@ button, .reset-btn {
                 deviationCell.innerHTML = formattedDeviation;
                 deviationCell.className = '';
             }
+            
+            // Update charts
+            updateDeviationChart();
+            updatePressureChart();
         }
         
         function resetData() {
@@ -399,6 +409,10 @@ button, .reset-btn {
                     cell.innerHTML = '';
                     cell.className = '';
                 });
+                
+                // Clear charts
+                updateDeviationChart();
+                updatePressureChart();
             }
         }
         
@@ -477,16 +491,60 @@ button, .reset-btn {
         function createPressureChart() {
             const ctx = document.getElementById('pressureChart').getContext('2d');
             pressureChart = new Chart(ctx, {
-                type: 'scatter',
+                type: 'line',
                 data: {
-                    datasets: [{
-                        label: 'Applied vs Measured',
-                        data: [],
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        pointRadius: 6
-                    }]
+                    datasets: [
+                        {
+                            label: 'Upper Spec',
+                            data: [],
+                            borderColor: 'rgba(173,216,230,1)',
+                            backgroundColor: 'rgba(173,216,230,0.3)',
+                            borderWidth: 0,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0,
+                            hidden: true
+                        },
+                        {
+                            label: 'Lower Spec',
+                            data: [],
+                            borderColor: 'rgba(173,216,230,1)',
+                            backgroundColor: 'rgba(173,216,230,0.3)',
+                            borderWidth: 0,
+                            pointRadius: 0,
+                            fill: '+1',
+                            tension: 0,
+                            hidden: true
+                        },
+                        {
+                            label: 'Perfect Line',
+                            data: [],
+                            borderColor: 'rgba(0, 128, 0, 1)',
+                            backgroundColor: 'rgba(0, 128, 0, 1)',
+                            borderWidth: 2,
+                            pointRadius: 15,
+                            pointBackgroundColor: 'rgba(0, 128, 0, 1)',
+                            pointBorderColor: 'rgba(0, 128, 0, 1)',
+                            pointBorderWidth: 3,
+                            fill: false,
+                            tension: 0,
+                            hidden: true
+                        },
+                        {
+                            label: 'Measured Line',
+                            data: [],
+                            borderColor: 'rgba(30, 144, 255, 1)',
+                            backgroundColor: 'rgba(30, 144, 255, 1)',
+                            borderWidth: 2,
+                            pointRadius: 15,
+                            pointBackgroundColor: 'rgba(30, 144, 255, 1)',
+                            pointBorderColor: 'rgba(30, 144, 255, 1)',
+                            pointBorderWidth: 3,
+                            fill: false,
+                            tension: 0,
+                            hidden: true
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -545,7 +603,13 @@ button, .reset-btn {
             if (!pressureChart) return;
             
             const percentages = [0, 25, 50, 75, 100];
-            const dataPoints = [];
+            const span = fullScaleValue - zeroValue;
+            
+            // Build data arrays
+            let perfectData = [];
+            let measuredData = [];
+            let upperData = [];
+            let lowerData = [];
             
             percentages.forEach(percent => {
                 const calInput = document.getElementById(`cal${percent}`);
@@ -554,105 +618,51 @@ button, .reset-btn {
                 const calValue = calInput.value ? parseFloat(calInput.value) : (zeroValue + (fullScaleValue - zeroValue) * (percent / 100));
                 const measValue = measInput.value ? parseFloat(measInput.value) : null;
                 
+                // Add to perfect data (applied = measured)
+                perfectData.push({
+                    x: calValue,
+                    y: calValue
+                });
+                
+                // Add to measured data if value exists
                 if (measValue !== null && !isNaN(measValue)) {
-                    dataPoints.push({
+                    measuredData.push({
                         x: calValue,
                         y: measValue
                     });
                 }
-            });
-            
-            pressureChart.data.datasets[0].data = dataPoints;
-            pressureChart.update();
-        }
-        
-        function updateCalculations() {
-            // Get input values
-            zeroValue = parseFloat(document.getElementById('zero').value) || 0;
-            fullScaleValue = parseFloat(document.getElementById('fullScale').value) || 0;
-            specValue = parseFloat(document.getElementById('spec').value) || 0;
-            
-            // Calculate span
-            const span = fullScaleValue - zeroValue;
-            const specDelta = span * (specValue / 100);
-            
-            // Update target pressures for each percentage
-            const percentages = [0, 25, 50, 75, 100];
-            
-            percentages.forEach(percent => {
-                const targetPressure = zeroValue + (span * (percent / 100));
-                const lowSpec = targetPressure - specDelta;
-                const highSpec = targetPressure + specDelta;
                 
-                const targetCell = document.getElementById(`target${percent}`);
-                targetCell.innerHTML = `
-                    <div style="font-size: 18px; font-weight: bold;">${targetPressure.toFixed(2)}</div>
-                    <div class="spec-range">${lowSpec.toFixed(2)} to ${highSpec.toFixed(2)}</div>
-                `;
-            });
-            
-            // Recalculate all deviations
-            percentages.forEach(percent => {
-                calculateDeviation(percent);
-            });
-            
-            // Update charts
-            updateDeviationChart();
-            updatePressureChart();
-        }
-        
-        function calculateDeviation(percent) {
-            // Get the measured pressure
-            const measInput = document.getElementById(`meas${percent}`);
-            const measValue = measInput.value ? parseFloat(measInput.value) : null;
-            
-            // If no measured value, clear the deviation cell and return
-            if (measValue === null || isNaN(measValue)) {
-                const deviationCell = document.getElementById(`deviation${percent}`);
-                deviationCell.innerHTML = '';
-                deviationCell.className = '';
-                updateDeviationChart();
-                updatePressureChart();
-                return;
-            }
-            
-            // Get the calibration applied pressure (use default if blank)
-            const calInput = document.getElementById(`cal${percent}`);
-            const calValue = calInput.value ? parseFloat(calInput.value) : (zeroValue + (fullScaleValue - zeroValue) * (percent / 100));
-            
-            // Calculate the expected pressure for this percentage
-            const expectedPressure = zeroValue + (fullScaleValue - zeroValue) * (percent / 100);
-            
-            // Calculate deviation as percentage of full scale
-            const span = fullScaleValue - zeroValue;
-            const deviation = ((measValue - calValue) / span) * 100;
-            
-            // Get the deviation cell
-            const deviationCell = document.getElementById(`deviation${percent}`);
-            
-            // Format the deviation
-            const formattedDeviation = deviation.toFixed(3) + '%';
-            
-            // Check if deviation exceeds spec (only if we have valid spec values)
-            if (specValue > 0 && span > 0) {
-                const specDelta = span * (specValue / 100);
-                const specLimit = (specDelta / span) * 100; // Convert to %F.S.
-                
-                if (Math.abs(deviation) > specLimit) {
-                    deviationCell.innerHTML = formattedDeviation;
-                    deviationCell.className = 'error-cell';
-                } else {
-                    deviationCell.innerHTML = formattedDeviation;
-                    deviationCell.className = '';
+                // Add to spec data if spec is entered
+                if (specValue > 0 && span > 0) {
+                    const specDelta = span * (specValue / 100);
+                    upperData.push({
+                        x: calValue,
+                        y: calValue + specDelta
+                    });
+                    lowerData.push({
+                        x: calValue,
+                        y: calValue - specDelta
+                    });
                 }
-            } else {
-                deviationCell.innerHTML = formattedDeviation;
-                deviationCell.className = '';
-            }
+            });
             
-            // Update charts
-            updateDeviationChart();
-            updatePressureChart();
+            // Update datasets
+            pressureChart.data.datasets[0].data = upperData;
+            pressureChart.data.datasets[1].data = lowerData;
+            pressureChart.data.datasets[2].data = perfectData;
+            pressureChart.data.datasets[3].data = measuredData;
+            
+            // Update visibility
+            const perfectLine = pressureChart.data.datasets[2];
+            const measuredLine = pressureChart.data.datasets[3];
+            const upperSpec = pressureChart.data.datasets[0];
+            const lowerSpec = pressureChart.data.datasets[1];
+            
+            perfectLine.hidden = !(zeroValue && fullScaleValue);
+            measuredLine.hidden = !measuredData.some(d => d);
+            upperSpec.hidden = lowerSpec.hidden = !(specValue > 0 && span > 0);
+            
+            pressureChart.update();
         }
     </script>
 </body>
